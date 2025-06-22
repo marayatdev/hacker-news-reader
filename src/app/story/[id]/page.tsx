@@ -1,5 +1,5 @@
-import axios from 'axios';
 import { notFound } from 'next/navigation';
+import axios from 'axios';
 
 interface Story {
     id: number;
@@ -15,6 +15,7 @@ interface Comment {
     text: string;
 }
 
+
 function sanitizeHtml(html: string) {
     return html
         .replace(/<script.*?>.*?<\/script>/gi, '')
@@ -22,10 +23,22 @@ function sanitizeHtml(html: string) {
         .replace(/javascript:/gi, '');
 }
 
-export default async function StoryPage({ params }: { params: { id: string } }) {
+type StoryPageProps = {
+    params: Promise<{ id: string }>;
+};
+
+
+export default async function StoryPage({ params }: StoryPageProps) {
+
+    const realParams = await params;
+    const id = realParams.id;
+
     const fetchStory = async (id: string): Promise<Story | null> => {
         try {
-            const res = await axios.get<Story>(`https://hacker-news.firebaseio.com/v0/item/${id}.json`, { timeout: 5000 });
+            const res = await axios.get<Story>(
+                `https://hacker-news.firebaseio.com/v0/item/${id}.json`,
+                { timeout: 5000 }
+            );
             return res.data;
         } catch {
             return null;
@@ -35,8 +48,13 @@ export default async function StoryPage({ params }: { params: { id: string } }) 
     const fetchComments = async (ids: number[] = []): Promise<Comment[]> => {
         const topComments = ids.slice(0, 5);
         try {
-            const promises = topComments.map(id =>
-                axios.get<Comment>(`https://hacker-news.firebaseio.com/v0/item/${id}.json`, { timeout: 5000 }).then(res => res.data)
+            const promises = topComments.map((id) =>
+                axios
+                    .get<Comment>(
+                        `https://hacker-news.firebaseio.com/v0/item/${id}.json`,
+                        { timeout: 5000 }
+                    )
+                    .then((res) => res.data)
             );
             return await Promise.all(promises);
         } catch {
@@ -44,8 +62,7 @@ export default async function StoryPage({ params }: { params: { id: string } }) 
         }
     };
 
-    const story = await fetchStory(params.id);
-
+    const story = await fetchStory(id);
     if (!story) return notFound();
 
     const comments = story.kids ? await fetchComments(story.kids) : [];
@@ -69,11 +86,13 @@ export default async function StoryPage({ params }: { params: { id: string } }) 
                 <section className="mt-8">
                     <h2 className="text-xl font-semibold mb-4 border-b border-gray-300 pb-2">Top Comments</h2>
                     <ul className="space-y-6">
-                        {comments.map(comment => (
+                        {comments.map((comment) => (
                             <li
                                 key={comment.id}
                                 className="bg-gray-100 p-4 rounded-lg shadow-sm break-words"
-                                dangerouslySetInnerHTML={{ __html: sanitizeHtml(comment.text || '') }}
+                                dangerouslySetInnerHTML={{
+                                    __html: sanitizeHtml(comment.text || ''),
+                                }}
                             />
                         ))}
                     </ul>
