@@ -15,7 +15,6 @@ interface Comment {
     text: string;
 }
 
-// ฟังก์ชัน sanitize ง่าย ๆ ป้องกัน XSS เบื้องต้น (แนะนำใช้ DOMPurify ใน production)
 function sanitizeHtml(html: string) {
     return html
         .replace(/<script.*?>.*?<\/script>/gi, '')

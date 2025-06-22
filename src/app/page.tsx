@@ -32,6 +32,7 @@ export default function HomePage() {
         setStories(res.data.stories);
         setTotalPages(res.data.totalPages);
       } catch (err) {
+        console.error(err);
         setError("Failed to load stories from database.");
       } finally {
         setLoading(false);
